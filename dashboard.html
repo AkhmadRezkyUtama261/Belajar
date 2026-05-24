@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Control Center - KarirKita</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#020617',
+                        cyanNeon: '#00f0ff',
+                        purpleNeon: '#c350ff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative">
+
+    <!-- Background Elements -->
+    <div class="grid-overlay"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <!-- Access Control & Security Verification -->
+    <script src="app.js"></script>
+    <script>
+        // Check if user is HR
+        const user = db.getCurrentUser();
+        if (!user || user.role !== "HR") {
+            document.body.innerHTML = `
+                <div class="min-h-screen flex flex-col items-center justify-center bg-slate-950 p-6 relative">
+                    <div class="grid-overlay"></div>
+                    <div class="glow-orb glow-orb-1"></div>
+                    <div class="glass-modal rounded-xl p-8 max-w-md text-center border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+                        <span class="text-5xl block animate-bounce">🔒</span>
+                        <h1 class="text-2xl font-bold text-red-400 mt-4 mb-2 uppercase tracking-wide">Akses Ditolak!</h1>
+                        <p class="text-slate-400 text-sm mb-6 leading-relaxed">Anda tidak memiliki kredensial otorisasi yang valid untuk mengakses konsol kontrol HR ini. Silakan masuk sebagai akun HRD.</p>
+                        <a href="index.html" class="btn-neon-cyan text-slate-950 font-bold rounded-lg px-6 py-2.5 inline-block text-sm uppercase tracking-wider">Kembali ke Portal</a>
+                    </div>
+                </div>
+            `;
+            throw new Error("Access denied: HR role required.");
+        }
+    </script>
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-950/80 border-b border-cyanNeon/10 text-white py-4 shadow-lg sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="p-1.5 bg-gradient-to-r from-cyanNeon to-purpleNeon text-slate-950 rounded-lg shadow-[0_0_15px_rgba(0,240,255,0.4)]">🚀</span>
+                <span class="font-bold text-lg tracking-wider font-sans">
+                    KarirKita <span class="text-xs bg-cyanNeon/10 text-cyanNeon border border-cyanNeon/30 font-semibold px-2 py-0.5 rounded-full ml-1.5">CONTROL PANEL</span>
+                </span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="index.html" class="text-slate-400 hover:text-cyanNeon transition-all-300 font-medium text-sm flex items-center">
+                    <span class="mr-1">🏠</span> Portal Utama
+                </a>
+                <span class="h-4 w-px bg-slate-800"></span>
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-slate-200" id="hr-name-display"></p>
+                    <p class="text-xs text-purpleNeon">Human Resources</p>
+                </div>
+                <button onclick="logoutUser()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold text-xs rounded-lg px-3 py-1.5 transition-all-300">
+                    Keluar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full grid grid-cols-1 gap-8 animate-fade-in relative z-10">
+        
+        <!-- Metrics Stats -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card rounded-xl p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Lowongan Aktif</h3>
+                    <p class="text-3xl font-extrabold text-white" id="stat-active-jobs">0</p>
+                </div>
+                <span class="text-3xl p-3 bg-cyanNeon/10 text-cyanNeon rounded-xl border border-cyanNeon/20">📄</span>
+            </div>
+            <div class="glass-card rounded-xl p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Lamaran Masuk</h3>
+                    <p class="text-3xl font-extrabold text-white" id="stat-total-apps">0</p>
+                </div>
+                <span class="text-3xl p-3 bg-purpleNeon/10 text-purpleNeon rounded-xl border border-purpleNeon/20">📋</span>
+            </div>
+            <div class="glass-card rounded-xl p-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Pending Review</h3>
+                    <p class="text-3xl font-extrabold text-white" id="stat-pending-apps">0</p>
+                </div>
+                <span class="text-3xl p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">⏳</span>
+            </div>
+        </section>
+
+        <!-- Two Columns Layout for Management -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Side: Add / Edit Vacancy (CRUD Form) -->
+            <section class="lg:col-span-1 glass-card rounded-xl p-6 self-start">
+                <h2 class="text-lg font-bold text-white mb-6 flex items-center border-b border-slate-900 pb-3">
+                    <span class="mr-2 text-cyanNeon">📝</span> <span id="form-action-title" class="neon-text-cyan font-sans uppercase text-sm tracking-wider">Pasang Lowongan Baru</span>
+                </h2>
+                <form id="job-crud-form" onsubmit="handleJobFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="edit-job-id">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Nama Posisi</label>
+                        <input type="text" id="job-title" required class="w-full rounded-lg px-3 py-2 text-sm" placeholder="Contoh: Backend Engineer">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Kategori</label>
+                            <select id="job-category" class="w-full rounded-lg px-3 py-2 text-sm bg-slate-900 border border-cyanNeon/20">
+                                <option value="Teknologi">Teknologi</option>
+                                <option value="Desain">Desain</option>
+                                <option value="Pemasaran">Pemasaran</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Kontrak</label>
+                            <select id="job-type" class="w-full rounded-lg px-3 py-2 text-sm bg-slate-900 border border-cyanNeon/20">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Internship">Internship</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Lokasi</label>
+                            <input type="text" id="job-location" required class="w-full rounded-lg px-3 py-2 text-sm" placeholder="Jakarta / Remote">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Status</label>
+                            <select id="job-status" class="w-full rounded-lg px-3 py-2 text-sm bg-slate-900 border border-cyanNeon/20">
+                                <option value="active">Aktif</option>
+                                <option value="closed">Ditutup</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Rentang Gaji</label>
+                        <input type="text" id="job-salary" required class="w-full rounded-lg px-3 py-2 text-sm" placeholder="Rp 6.000.000 - Rp 9.000.000">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Deskripsi & Syarat</label>
+                        <textarea id="job-desc" required rows="4" class="w-full rounded-lg px-3 py-2 text-sm" placeholder="Tuliskan deskripsi pekerjaan dan kriteria pelamar..."></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-2 pt-2">
+                        <button type="submit" id="btn-submit-job" class="flex-1 btn-neon-cyan text-slate-950 font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all-300">Simpan Data</button>
+                        <button type="button" id="btn-cancel-edit" onclick="resetJobForm()" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-lg text-xs px-4 border border-slate-700 transition-all-300">Batal</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Right Side: Job Postings List & Candidates Sub-Section -->
+            <section class="lg:col-span-2 space-y-8">
+                
+                <!-- List of Posted Jobs -->
+                <div class="glass-card rounded-xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-6 flex items-center border-b border-slate-900 pb-3">
+                        <span class="mr-2">📁</span> Daftar Posisi Kerja yang Dipasang
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="futuristic-table text-left">
+                            <thead>
+                                <tr class="text-slate-400 text-xs uppercase font-bold tracking-wider border-b border-cyanNeon/20">
+                                    <th class="py-3 px-4">Judul Posisi</th>
+                                    <th class="py-3 px-4">Kategori / Tipe</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobs-table-body" class="text-slate-300 text-sm">
+                                <!-- Dynamic rows via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Candidates / Applications Table (Core Requirement) -->
+                <div class="glass-card rounded-xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-6 flex items-center border-b border-slate-900 pb-3">
+                        <span class="mr-2">👨‍💼</span> Data Pelamar Masuk
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="futuristic-table text-left">
+                            <thead>
+                                <tr class="text-slate-400 text-xs uppercase font-bold tracking-wider border-b border-cyanNeon/20">
+                                    <th class="py-3 px-4">Nama Pelamar</th>
+                                    <th class="py-3 px-4">Posisi Dilamar</th>
+                                    <th class="py-3 px-4">Dokumen CV</th>
+                                    <th class="py-3 px-4">Status Proses</th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidates-table-body" class="text-slate-300 text-sm">
+                                <!-- Dynamic rows via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950/80 border-t border-slate-900 text-slate-500 py-6 text-center text-xs mt-12">
+        KarirKita HR Panel &bull; Sistem Rekrutmen &copy; 2026. Futuristic Prototyping.
+    </footer>
+
+    <!-- Script Operations -->
+    <script>
+        // DOM Elements
+        const hrNameDisplay = document.getElementById("hr-name-display");
+        const statActiveJobs = document.getElementById("stat-active-jobs");
+        const statTotalApps = document.getElementById("stat-total-apps");
+        const statPendingApps = document.getElementById("stat-pending-apps");
+
+        const jobForm = document.getElementById("job-crud-form");
+        const editJobId = document.getElementById("edit-job-id");
+        const formActionTitle = document.getElementById("form-action-title");
+        const btnSubmitJob = document.getElementById("btn-submit-job");
+        const btnCancelEdit = document.getElementById("btn-cancel-edit");
+
+        const jobsTableBody = document.getElementById("jobs-table-body");
+        const candidatesTableBody = document.getElementById("candidates-table-body");
+
+        // Init
+        document.addEventListener("DOMContentLoaded", () => {
+            hrNameDisplay.textContent = user.name;
+            renderDashboard();
+        });
+
+        // Main Render
+        function renderDashboard() {
+            renderStats();
+            renderJobsTable();
+            renderCandidatesTable();
+        }
+
+        // Render Metrics Counters
+        function renderStats() {
+            const jobs = db.getJobs();
+            const activeJobs = jobs.filter(j => j.status === "active").length;
+            const apps = db.getApplications();
+            const pendingApps = apps.filter(a => a.status === "Applied" || a.status === "Under Review").length;
+
+            statActiveJobs.textContent = activeJobs;
+            statTotalApps.textContent = apps.length;
+            statPendingApps.textContent = pendingApps;
+        }
+
+        // Render Posted Vacancy Table
+        function renderJobsTable() {
+            const jobs = db.getJobs();
+            jobsTableBody.innerHTML = "";
+
+            if (jobs.length === 0) {
+                jobsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-slate-500 italic">Belum ada lowongan pekerjaan yang dibuat.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            jobs.forEach(job => {
+                const statusBadge = job.status === "active" 
+                    ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/25">Aktif</span>`
+                    : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-500 border border-slate-700">Tutup</span>`;
+
+                const row = document.createElement("tr");
+                row.className = "border-b border-slate-900/50 hover:bg-slate-900/20";
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-semibold text-white">${job.title}</td>
+                    <td class="py-4 px-4 text-xs text-slate-400">
+                        <span class="block text-cyanNeon">${job.category}</span>
+                        <span class="block font-medium">${job.type}</span>
+                    </td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                    <td class="py-4 px-4 text-right">
+                        <div class="flex justify-end space-x-3">
+                            <button onclick="setupEditJob('${job.id}')" class="text-cyanNeon hover:underline font-semibold text-xs transition-all-300">Edit</button>
+                            <button onclick="handleDeleteJob('${job.id}')" class="text-red-400 hover:underline font-semibold text-xs transition-all-300">Hapus</button>
+                        </div>
+                    </td>
+                `;
+                jobsTableBody.appendChild(row);
+            });
+        }
+
+        // Render Candidates Grid
+        function renderCandidatesTable() {
+            const apps = db.getApplications();
+            candidatesTableBody.innerHTML = "";
+
+            if (apps.length === 0) {
+                candidatesTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-slate-500 italic">Belum ada berkas lamaran yang masuk.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            apps.forEach(app => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-slate-900/50 hover:bg-slate-900/20";
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-semibold text-white">
+                        ${app.applicantName}
+                        <span class="block text-xs text-slate-500 font-normal font-sans">${app.applicantEmail}</span>
+                    </td>
+                    <td class="py-4 px-4 text-slate-400 font-medium">${app.jobTitle}</td>
+                    <td class="py-4 px-4">
+                        <a href="#" onclick="mockDownloadCV('${app.cvName}')" class="text-red-400 hover:text-red-500 font-medium flex items-center text-xs">
+                            <span class="mr-1.5 text-sm">📄</span> Download PDF
+                        </a>
+                    </td>
+                    <td class="py-4 px-4">
+                        <select onchange="handleStatusChange('${app.id}', this.value)" class="border border-cyanNeon/20 rounded px-2.5 py-1 text-xs bg-slate-900 text-slate-200 focus:outline-none focus:border-cyanNeon font-medium">
+                            <option value="Applied" ${app.status === 'Applied' ? 'selected' : ''}>Applied</option>
+                            <option value="Under Review" ${app.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
+                            <option value="Interview" ${app.status === 'Interview' ? 'selected' : ''}>Interview</option>
+                            <option value="Accepted" ${app.status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+                            <option value="Rejected" ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                    </td>
+                `;
+                candidatesTableBody.appendChild(row);
+            });
+        }
+
+        // Form Submit Handler (Create or Update Job)
+        function handleJobFormSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById("job-title").value;
+            const category = document.getElementById("job-category").value;
+            const type = document.getElementById("job-type").value;
+            const location = document.getElementById("job-location").value;
+            const status = document.getElementById("job-status").value;
+            const salary = document.getElementById("job-salary").value;
+            const description = document.getElementById("job-desc").value;
+
+            const jobId = editJobId.value;
+
+            if (jobId) {
+                // Update
+                const success = updateJob(jobId, { title, category, type, location, status, salary, description });
+                if (success) alert("Lowongan berhasil diperbarui!");
+            } else {
+                // Create
+                createJob(title, category, location, type, salary, description);
+                alert("Lowongan baru berhasil dipasang!");
+            }
+
+            resetJobForm();
+            renderDashboard();
+        }
+
+        // Populate Form for Editing
+        function setupEditJob(id) {
+            const jobs = db.getJobs();
+            const job = jobs.find(j => j.id === id);
+            if (!job) return;
+
+            editJobId.value = job.id;
+            document.getElementById("job-title").value = job.title;
+            document.getElementById("job-category").value = job.category;
+            document.getElementById("job-type").value = job.type;
+            document.getElementById("job-location").value = job.location;
+            document.getElementById("job-status").value = job.status;
+            document.getElementById("job-salary").value = job.salary;
+            document.getElementById("job-desc").value = job.description;
+
+            formActionTitle.textContent = "Edit Lowongan Pekerjaan";
+            btnSubmitJob.textContent = "Perbarui Lowongan";
+            btnCancelEdit.classList.remove("hidden");
+        }
+
+        // Delete Job Handler
+        function handleDeleteJob(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus lowongan ini? Seluruh data lamaran terkait lowongan ini juga akan dihapus.")) {
+                deleteJob(id);
+                renderDashboard();
+            }
+        }
+
+        // Status Change Handler
+        function handleStatusChange(appId, newStatus) {
+            const success = updateApplicationStatus(appId, newStatus);
+            if (success) {
+                renderStats();
+            }
+        }
+
+        // Reset CRUD Form
+        function resetJobForm() {
+            jobForm.reset();
+            editJobId.value = "";
+            formActionTitle.textContent = "Pasang Lowongan Baru";
+            btnSubmitJob.textContent = "Simpan Lowongan";
+            btnCancelEdit.classList.add("hidden");
+        }
+
+        // Mock Download CV
+        function mockDownloadCV(fileName) {
+            alert(`📥 [MOCKUP DOWNLOAD]\nBerhasil mengunduh dokumen pelamar:\n➡ File: ${fileName}\n\n(Catatan: Pada sistem full-stack asli, ini akan mengunduh file asli dari server penyimpanan).`);
+        }
+    </script>
+</body>
+</html>

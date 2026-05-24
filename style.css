@@ -1,0 +1,168 @@
+/* Futuristic Cyberpunk Design System */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-main: hsl(224, 30%, 4%);
+    --bg-card: hsla(224, 25%, 8%, 0.65);
+    --border-neon: hsla(190, 100%, 50%, 0.2);
+    --border-neon-hover: hsla(280, 100%, 65%, 0.4);
+    
+    --color-text: hsl(220, 20%, 92%);
+    --color-text-muted: hsl(220, 10%, 60%);
+    
+    --neon-cyan: hsl(190, 100%, 50%);
+    --neon-cyan-glow: rgba(0, 240, 255, 0.35);
+    --neon-purple: hsl(280, 100%, 65%);
+    --neon-purple-glow: rgba(195, 80, 255, 0.35);
+    
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Digital Grid Background & Orbs */
+.grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.glow-orb {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(130px);
+    z-index: -2;
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+.glow-orb-1 {
+    top: -10%;
+    right: -10%;
+    background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+}
+
+.glow-orb-2 {
+    bottom: 20%;
+    left: -10%;
+    background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%);
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-neon);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+    border-color: var(--border-neon-hover);
+    box-shadow: 0 12px 40px 0 rgba(195, 80, 255, 0.15), 0 0 15px var(--border-neon);
+    transform: translateY(-4px);
+}
+
+/* Glowing text classes */
+.neon-text-cyan {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan-glow);
+}
+
+.neon-text-purple {
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px var(--neon-purple-glow);
+}
+
+.gradient-text-neon {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Futuristic Inputs */
+input, select, textarea {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid var(--border-neon) !important;
+    color: var(--color-text) !important;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: var(--neon-cyan) !important;
+    box-shadow: 0 0 10px var(--neon-cyan-glow) !important;
+}
+
+/* Futuristic Button */
+.btn-neon-cyan {
+    background: linear-gradient(135deg, var(--neon-cyan), hsl(190, 100%, 40%));
+    color: #020617;
+    font-weight: 700;
+    box-shadow: 0 4px 14px var(--neon-cyan-glow);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-cyan:hover {
+    box-shadow: 0 6px 20px var(--neon-cyan), 0 0 10px var(--neon-cyan-glow);
+    transform: translateY(-2px);
+}
+
+.btn-neon-purple {
+    background: linear-gradient(135deg, var(--neon-purple), hsl(280, 100%, 55%));
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 4px 14px var(--neon-purple-glow);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-purple:hover {
+    box-shadow: 0 6px 20px var(--neon-purple), 0 0 10px var(--neon-purple-glow);
+    transform: translateY(-2px);
+}
+
+/* Tables styling */
+.futuristic-table {
+    width: 100%;
+}
+
+.futuristic-table th {
+    font-family: var(--font-heading);
+    border-bottom: 2px solid var(--border-neon);
+    color: var(--neon-cyan);
+}
+
+.futuristic-table tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease;
+}
+
+.futuristic-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Modals glassmorphism */
+.glass-modal {
+    background: rgba(10, 15, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-neon-hover);
+    box-shadow: 0 0 40px rgba(195, 80, 255, 0.2);
+}
